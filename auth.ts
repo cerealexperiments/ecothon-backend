@@ -19,6 +19,12 @@ type Tailor = {
   portfolio?: string[];
 }
 
+type LoginType = {
+  email: string;
+  password: string;
+  userType: string;
+}
+
 export default async function authRoutes(server: FastifyInstance, pool: Pool ) {
 
   server.post('/auth/registerUser', async (request, reply) => {
@@ -46,5 +52,27 @@ export default async function authRoutes(server: FastifyInstance, pool: Pool ) {
   })
 
   server.post('/auth/login', async (request, reply) => {
+    const {userType, email, password} = request.body as LoginType;
+    if(userType === "user") {
+      const {rows} = await pool.query(`select * from users where email = $1 and password = $2`, [email, password]);
+      if(rows.length === 0) {
+        return {
+          message: "user not found"
+        }
+      }
+      return {
+        user: rows[0] 
+      }
+    } else {
+      const {rows} = await pool.query(`select * from tailors where email = $1 and password = $2`, [email, password]);
+      if(rows.length === 0) {
+        return {
+          message: "user not found"
+        }
+      }
+      return {
+        user: rows[0] 
+      }
+    }
   });
 }

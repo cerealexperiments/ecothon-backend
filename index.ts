@@ -7,6 +7,7 @@ import fs from 'fs';
 import path from 'path';
 import staticPlugin from "@fastify/static"
 import { promisify } from 'util';
+import cors from "@fastify/cors";
 
 const pump = promisify(pipeline)
 
@@ -21,6 +22,10 @@ const pool = new Pool({
   port: 5432
 })
 
+
+fastify.register(cors, {
+  origin: "*"
+})
 fastify.register(multipart)
 fastify.register(staticPlugin, {
   root: path.join(__dirname, 'uploads'),
