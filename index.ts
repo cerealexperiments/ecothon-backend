@@ -12,6 +12,7 @@ import cors from "@fastify/cors";
 const pump = promisify(pipeline)
 
 const fastify = Fastify({
+  logger: true
 })
 
 const pool = new Pool({
@@ -70,6 +71,35 @@ fastify.post("/uploadTailorPortfolio", async (request, reply) => {
 }) 
 
 
+type OrderBody = {
+  ordered_by: string;
+  ordered_by_id: number;
+  details: string;
+}
+
+fastify.get("/orders", async(request, reply) => {
+  const {userId} = request.query as {
+    userId: string;
+  };
+  const {rows} = await pool.query(`SELECT * FROM orders where ordered_by_id = ${Number(userId)}`);
+  return {
+    ...rows
+  }
+})
+
+fastify.post("/order", async(request, reply) => {
+  const {ordered_by, ordered_by_id, details} = request.body as OrderBody;
+  await pool.query(`INSERT INTO orders (ordered_by, details, ordered_by_id) VALUES ($1, $2, $3)`, [ordered_by, details, ordered_by_id])
+  return {
+    status: "success",
+    order: {
+      ordered_by,
+      details,
+      ordered_by_id
+    }
+  }
+})
+
 fastify.get('/', async (request, reply) => {
   return { hello: 'world' }
 })
@@ -81,7 +111,7 @@ fastify.get("/users", async (request, reply) => {
 
 const start = async () => {
   try {
-    await fastify.listen({ port: 3000 })
+    await fastify.listen({ port: 3030 })
   } catch (err) {
     fastify.log.error(err)
     process.exit(1)
